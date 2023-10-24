@@ -1,0 +1,87 @@
+
+import Connexion.Connect;
+import com.mysql.jdbc.PreparedStatement;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import projet2.Etudiant;
+
+/**
+ *
+ * @author noudo
+ */
+public class EtudiantServices {
+    
+    public static boolean enregistrer(Etudiant e){
+        Connection con = Connect.se_connecter();  
+        boolean ajout = false;
+        String requete = "Insert into etudiant(nom, prenoms,date_nais,lieu_nais,filiere,nationalite,statut) values(?,?,?,?,?,?,?)";
+        
+        try {
+            PreparedStatement ps = (PreparedStatement) con.prepareStatement(requete);
+            ps.setString(1, e.getNom());
+            ps.setString(2, e.getPrenom());
+            ps.setObject(3, e.getDate_naissance());
+            ps.setString(4, e.getLieu_naissance());
+            ps.setString(5, e.getFiliere());
+            ps.setString(6, e.getNationalite());
+            ps.setString(7, e.getStatut());
+            ps.execute();
+            ajout = true;
+            //JOptionPane.showMessageDialog(null, "Enregistrement effectuer avec succes");   
+        } catch (SQLException ex) {
+            Logger.getLogger(EtudiantServices.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ajout;
+    }
+
+     public static List<Etudiant> listEtudiant() throws SQLException{
+         Connection con = Connect.se_connecter(); 
+         String requete = "select * from etudiant";
+         ResultSet rs;
+         List<Etudiant> list = new ArrayList<>();
+         Statement st = con.createStatement();
+         rs = st.executeQuery(requete);
+         while(rs.next())
+         {
+           Etudiant e = new Etudiant();
+           e.setId(rs.getInt("id"));
+           e.setNom(rs.getString("nom"));
+           e.setPrenom(rs.getString("prenoms"));
+           e.setDate_naissance(rs.getDate("date_nais"));
+           e.setLieu_naissance(rs.getString("lieu_nais"));
+           e.setFiliere(rs.getString("filiere"));
+           e.setNationalite(rs.getString("nationalite"));
+           e.setStatut(rs.getString("statut"));
+           list.add(e);
+         }
+         return list;
+     }  
+     
+     public static DefaultTableModel maTableModel(){
+         DefaultTableModel model= new DefaultTableModel();
+         String[] entete = {"ID","NOM","PRENOM","DATE NAIS","LIEU","FILIERE","NATIONALITE","STATUT"};
+         model.setColumnIdentifiers(entete);
+        try {
+            List<Etudiant> list = listEtudiant();
+             for (Etudiant e : list) {
+             String[] donnees = {e.getId()+"",
+                                 e.getNom(),
+                                 e.getPrenom(),
+                                 e.getDate_naissance().toString(),
+                                 e.getLieu_naissance(),
+                                 e.getFiliere(),
+                                 e.getNationalite(),
+                                 e.getStatut()};
+             model.addRow(donnees);
+         }
+        } catch (SQLException ex) {
+            Logger.getLogger(EtudiantServices.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+         return model;
+     }
